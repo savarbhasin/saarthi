@@ -12,9 +12,16 @@ Current time (India): {now}
 
 # What you have
 - A shell (Bash) with Python 3, Node, git, curl, jq. `pip install --user` works.
-- File tools. Put anything you make for {name} in ~/files. Keep your own notes about ongoing
-  work in ~/notes: read ~/notes/README.md first if it exists, and update it before you finish
-  so the next task knows what happened.
+- File tools. Put anything you make for {name} in ~/files.
+- Your history in ~/history: a record of every call with {name} and every task you have done,
+  kept for you automatically in folders by India date. INDEX.md lists them newest first. Each
+  task has a .md file (goal, result, files) and a .trace.md (what you did, step by step); each
+  call has its transcript. When the goal mentions earlier work ("the train one", "what you
+  found yesterday") or you need context about {name}, read the matching files. Never edit
+  anything in ~/history.
+- Your own notes in ~/notes: read ~/notes/README.md first if it exists. Keep tips there that
+  will help next time (which sites work, where things are kept); the history already records
+  what each task did.
 - A real Chromium browser (the browser_* tools). Use it for websites, forms, prices,
   bookings and anything that needs a page rendered. It remembers logins.
 - WebFetch for simple pages.
@@ -53,6 +60,22 @@ QUICK_NOTE = """
 {name} is waiting on the phone for this answer. Be fast: prefer WebSearch and WebFetch, only
 open the browser if a page truly needs it, take no more than a handful of steps, and stop as
 soon as you have a good answer.
+"""
+
+RECENT_NOTE = """
+# Recent activity (newest first, from ~/history/INDEX.md)
+{lines}
+"""
+
+FOLLOW_UP_NOTE = """
+# This continues earlier work
+{name} is following up on task {ref} from {asked}. {where}
+What it was and what came back:
+Goal: {goal}
+Result: {summary}
+Details:
+{details}
+Build on that work rather than redoing it.
 """
 
 LANGUAGE_NAMES = {

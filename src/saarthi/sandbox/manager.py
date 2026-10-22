@@ -109,6 +109,16 @@ async def ensure(user_id: uuid.UUID) -> Sandbox:
     return dataclasses.replace(sandbox, vnc_host_port=port)
 
 
+async def put_calls(sandbox: Sandbox, calls: list[dict]) -> None:
+    async with httpx.AsyncClient(timeout=30) as http:
+        response = await http.post(
+            f"{sandbox.url}/history/calls",
+            json={"calls": calls},
+            headers={"Authorization": f"Bearer {sandbox.token}"},
+        )
+        response.raise_for_status()
+
+
 async def start_task(sandbox: Sandbox, payload: dict) -> None:
     async with httpx.AsyncClient(timeout=15) as http:
         response = await http.post(

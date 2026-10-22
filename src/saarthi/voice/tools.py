@@ -127,6 +127,10 @@ DO_TASK = ToolSpec(
                 "wait_for_task), 'no' to call them back when it is done."
             ),
         },
+        "follow_up": _text(
+            'If this builds on an earlier task ("the train one from yesterday", "book the '
+            "cheaper one\"), that task's id from task_status. Empty string otherwise."
+        ),
     },
 )
 

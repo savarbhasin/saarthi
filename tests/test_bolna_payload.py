@@ -9,7 +9,14 @@ def test_tools_are_all_required_and_templated():
     api_tools = to_bolna_api_tools([DO_TASK], "https://saarthi.example/", "s3cret")
     tool = api_tools["tools"][0]
     assert tool["key"] == "custom_task"
-    assert set(tool["parameters"]["required"]) == {"session", "goal", "run_at", "repeat", "wait"}
+    assert set(tool["parameters"]["required"]) == {
+        "session",
+        "goal",
+        "run_at",
+        "repeat",
+        "wait",
+        "follow_up",
+    }
     params = api_tools["tools_params"]["do_task"]
     assert params["url"] == "https://saarthi.example/tools/do_task"
     assert params["param"]["goal"] == "%(goal)s"

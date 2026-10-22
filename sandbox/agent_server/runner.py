@@ -1,10 +1,20 @@
 import os
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
-from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
+from claude_agent_sdk import (
+    AssistantMessage,
+    ClaudeAgentOptions,
+    ResultMessage,
+    TextBlock,
+    ToolResultBlock,
+    ToolUseBlock,
+    UserMessage,
+    query,
+)
 
+from agent_server import history
 from agent_server.calls import calls_server
 from agent_server.prompt import LANGUAGE_NAMES, QUICK_NOTE, SYSTEM_PROMPT
 
@@ -32,6 +42,16 @@ class Outcome:
     details: str
     cost_usd: float | None
     session_id: str | None
+    turns: int | None = None
+    trace: list[str] = field(default_factory=list)
+
+    @property
+    def raw_log(self) -> str:
+        # Where the SDK keeps the full transcript of a run: ~/.claude/projects/<cwd with - for />.
+        if not self.session_id:
+            return ""
+        project = str(HOME).replace("/", "-")
+        return f"~/.claude/projects/{project}/{self.session_id}.jsonl"
 
 
 QUICK_MAX_TURNS = 12
@@ -47,6 +67,7 @@ def _options(
     language: str,
     pack_prompt: str,
     calls_url: str,
+    context_note: str,
 ) -> ClaudeAgentOptions:
     system_prompt = SYSTEM_PROMPT.format(
         name=name,
@@ -57,6 +78,7 @@ def _options(
     )
     if quick:
         system_prompt += QUICK_NOTE.format(name=name)
+    system_prompt += context_note
     max_turns = int(os.environ.get("WORKER_MAX_TURNS", "60"))
     mcp_servers: dict = {"browser": _browser_server()}
     if calls_url:
@@ -110,8 +132,10 @@ async def run(
     language: str = "hi",
     pack_prompt: str = "",
     calls_url: str = "",
+    context_note: str = "",
 ) -> Outcome:
     final: ResultMessage | None = None
+    trace: list[str] = []
     async for message in query(
         prompt=goal,
         options=_options(
@@ -123,11 +147,38 @@ async def run(
             language=language,
             pack_prompt=pack_prompt,
             calls_url=calls_url,
+            context_note=context_note,
         ),
     ):
         if isinstance(message, ResultMessage):
             final = message
+        else:
+            trace.extend(_trace_lines(message))
     if final is None or not final.result:
-        return Outcome(False, "काम पूरा नहीं हो पाया।", "agent produced no result", None, None)
+        return Outcome(
+            False, "काम पूरा नहीं हो पाया।", "agent produced no result", None, None, trace=trace
+        )
     summary, details = parse_final(final.result)
-    return Outcome(not final.is_error, summary, details, final.total_cost_usd, final.session_id)
+    return Outcome(
+        not final.is_error,
+        summary,
+        details,
+        final.total_cost_usd,
+        final.session_id,
+        turns=final.num_turns,
+        trace=trace,
+    )
+
+
+def _trace_lines(message) -> list[str]:
+    if not isinstance(message, AssistantMessage | UserMessage) or isinstance(message.content, str):
+        return []
+    lines = []
+    for block in message.content:
+        if isinstance(block, TextBlock) and isinstance(message, AssistantMessage):
+            lines.append(block.text.strip())
+        elif isinstance(block, ToolUseBlock):
+            lines.append(history.tool_line(block.name, block.input))
+        elif isinstance(block, ToolResultBlock):
+            lines.append(history.result_line(block.content, bool(block.is_error)))
+    return [line for line in lines if line]

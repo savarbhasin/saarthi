@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mkdir -p ~/files ~/notes ~/.browser-profile
+mkdir -p ~/files ~/notes ~/history ~/.browser-profile
 
 # A virtual screen so the browser runs headed and can be watched over noVNC on :6080.
 Xvfb :99 -screen 0 1280x800x24 -nolisten tcp &

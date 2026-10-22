@@ -10,9 +10,21 @@ ACTIVE = (TaskStatus.QUEUED, TaskStatus.RUNNING, TaskStatus.WAITING_USER)
 
 
 async def create(
-    session: AsyncSession, user_id: uuid.UUID, goal: str, *, caller_waiting: bool = False
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    goal: str,
+    *,
+    caller_waiting: bool = False,
+    call_execution_id: str | None = None,
+    follow_up_of: uuid.UUID | None = None,
 ) -> Task:
-    task = Task(user_id=user_id, goal=goal.strip(), caller_waiting=caller_waiting)
+    task = Task(
+        user_id=user_id,
+        goal=goal.strip(),
+        caller_waiting=caller_waiting,
+        call_execution_id=call_execution_id,
+        follow_up_of=follow_up_of,
+    )
     session.add(task)
     await session.flush()
     return task

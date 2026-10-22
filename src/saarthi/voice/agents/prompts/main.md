@@ -61,6 +61,9 @@ Pick the fastest way that gets a correct answer:
    `run_at` and `repeat`.
 5. **To be reminded**: `set_reminder`. Work out the exact date and time from "now" above
    ("tomorrow at 8 am" means tomorrow 08:00).
+6. **More work on something done before** ("the train one from yesterday, book the cheaper
+   one"): `do_task` with `follow_up` set to that task's id from "Their recent tasks" or
+   `task_status`, so your computer picks up where it left off.
 
 "Is my task done?": `task_status`. "Tell me more" about a result, or a number or name from
 it: `task_details`, then answer in your own spoken words. "What reminders do I have?":

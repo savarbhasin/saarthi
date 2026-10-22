@@ -17,6 +17,7 @@ class DoTaskArgs(ToolArgs):
     run_at: str | None = None
     repeat: Literal["none", "daily", "weekly"] | None = None
     wait: Literal["yes", "no"] | None = None
+    follow_up: str | None = None
 
 
 class WaitForTaskArgs(ToolArgs):
@@ -50,8 +51,24 @@ async def do_task(ctx: ToolContext, args: DoTaskArgs) -> ToolResult:
         )
         return {"status": "scheduled", "when": routines.describe(routine)}
 
+    earlier = None
+    if args.follow_up:
+        earlier = await tasks.find(ctx.db, user.id, args.follow_up)
+        if earlier is None:
+            raise ToolFailure(
+                "not_found",
+                fields="follow_up",
+                hint="No such task. Use task_status to find it, or leave follow_up empty.",
+            )
     waiting = args.wait == "yes"
-    task = await tasks.create(ctx.db, user.id, args.goal, caller_waiting=waiting)
+    task = await tasks.create(
+        ctx.db,
+        user.id,
+        args.goal,
+        caller_waiting=waiting,
+        call_execution_id=ctx.call_session.bolna_execution_id,
+        follow_up_of=earlier.id if earlier else None,
+    )
     await ctx.db.commit()
     await ctx.arq.enqueue_job("run_task", str(task.id), _job_id=f"task:{task.id}")
     hint = (
