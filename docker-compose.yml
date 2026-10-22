@@ -1,0 +1,86 @@
+x-app: &app
+  build: .
+  image: saarthi-app
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql+asyncpg://saarthi:saarthi@postgres:5432/saarthi
+    REDIS_URL: redis://redis:6379/0
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: saarthi
+      POSTGRES_PASSWORD: saarthi
+      POSTGRES_DB: saarthi
+    ports: ["5433:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saarthi"]
+      interval: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6380:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      retries: 20
+
+  migrate:
+    <<: *app
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+
+  api:
+    <<: *app
+    ports: ["8080:8000"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *app
+    command: ["arq", "saarthi.jobs.worker.WorkerSettings"]
+    # Starts and manages the per-user sandbox containers.
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  scheduler:
+    <<: *app
+    command: ["saarthi-scheduler"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  # Image for the per-user sandboxes; the worker starts containers from it on demand.
+  # Build with `docker compose --profile sandbox build sandbox`.
+  sandbox:
+    build: sandbox
+    image: saarthi-sandbox:latest
+    profiles: [sandbox]
+
+  # `docker compose --profile tunnel up tunnel`, then copy the trycloudflare URL into
+  # PUBLIC_BASE_URL and run `saarthi-sync`.
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: ["tunnel", "--no-autoupdate", "--url", "http://api:8000"]
+    depends_on: [api]
+    profiles: [tunnel]
+
+volumes:
+  pgdata:
+
+# Fixed name so sandbox containers can join it and reach the API as http://api:8000.
+networks:
+  default:
+    name: saarthi-net
