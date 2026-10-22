@@ -46,6 +46,10 @@ async def unreported(session: AsyncSession, user_id: uuid.UUID) -> list[Task]:
     return list(rows)
 
 
+async def by_callback(session: AsyncSession, execution_id: str) -> Task | None:
+    return await session.scalar(select(Task).where(Task.callback_execution_id == execution_id))
+
+
 def finish(task: Task, *, ok: bool, summary: str, result: str | None, cost_usd: float | None):
     task.status = TaskStatus.DONE if ok else TaskStatus.FAILED
     task.summary = summary

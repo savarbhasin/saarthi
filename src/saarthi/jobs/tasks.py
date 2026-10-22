@@ -57,7 +57,7 @@ async def run_task(ctx: dict, task_id: str) -> None:
 async def report_task(ctx: dict, task_id: str) -> None:
     async with session_scope() as session:
         task = await session.get(Task, uuid.UUID(task_id))
-        if task is None or task.reported_at is not None:
+        if task is None or task.reported_at is not None or task.callback_execution_id:
             return
         user = await session.get(User, task.user_id)
         phone, summary = user.phone, task.summary or ""
@@ -68,6 +68,9 @@ async def report_task(ctx: dict, task_id: str) -> None:
         # Left unreported: the next time they call in, the greeting tells them instead.
         log.exception("callback for task %s failed", task_id)
         return
+    # Not marked heard yet: the execution webhook does that once a person picks up. On
+    # voicemail or no answer it stays unheard and the next greeting tells them.
     async with session_scope() as session:
-        tasks.mark_reported([await session.get(Task, uuid.UUID(task_id))])
-    log.info("task %s reported on call %s", task_id, execution_id)
+        task = await session.get(Task, uuid.UUID(task_id))
+        task.callback_execution_id = execution_id
+    log.info("task %s callback placed on call %s", task_id, execution_id)

@@ -117,6 +117,9 @@ class Task(Base):
     cost_usd: Mapped[float | None] = mapped_column(Numeric(10, 4))
     # The caller is holding the line for this result (see api.tools.tasks.wait_for_task).
     caller_waiting: Mapped[bool] = mapped_column(default=False, server_default="false")
+    # The call that rang them with the result. The result only counts as heard once that call
+    # completes with a person on the line (see api.routes.webhooks).
+    callback_execution_id: Mapped[str | None] = mapped_column(String(64), index=True)
     reported_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = _created_at()
     updated_at: Mapped[datetime] = mapped_column(

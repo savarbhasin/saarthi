@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from saarthi.api.deps import BolnaAuth, Db
 from saarthi.db.models import BolnaAgent, Call, CallDirection
-from saarthi.domain import outreach, users
+from saarthi.domain import outreach, tasks, users
 from saarthi.domain.phone import InvalidPhone, normalize_phone
 from saarthi.jobs.outreach import enqueue_report
 from saarthi.voice.outbound import MESSENGER_AGENT
@@ -30,6 +30,7 @@ class ExecutionEvent(BaseModel):
     transcript: str | None = None
     extracted_data: dict[str, Any] | None = None
     conversation_duration: float | None = None
+    answered_by_voice_mail: bool | None = None
     telephony_data: TelephonyData | None = None
     context_details: dict[str, Any] | None = None
 
@@ -48,6 +49,12 @@ def _counterpart_phone(event: ExecutionEvent) -> tuple[CallDirection | None, str
         return direction, normalize_phone(raw)
     except InvalidPhone:
         return direction, raw
+
+
+def _person_answered(event: ExecutionEvent) -> bool:
+    # Busy, no-answer and failed calls are final statuses of their own; only `completed`
+    # means the call connected, and Bolna flags it when a voicemail picked up.
+    return event.status == "completed" and not event.answered_by_voice_mail
 
 
 @router.post("/bolna")
@@ -83,6 +90,10 @@ async def bolna_execution(request: Request, db: Db) -> dict[str, str]:
             index_elements=[Call.bolna_execution_id], set_=updates
         ).returning(Call.id)
     )
+    if not is_messenger and _person_answered(event):
+        task = await tasks.by_callback(db, event.id)
+        if task is not None and task.reported_at is None:
+            tasks.mark_reported([task])
     await db.commit()
 
     if is_messenger:
