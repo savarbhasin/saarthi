@@ -1,4 +1,4 @@
-from saarthi.packs.base import KHATA_WORKER, Pack
+from saarthi.packs.base import KHATA_WORKER, Ability, Pack
 
 VOICE_PROMPT = """\
 # This caller runs a kirana (general store)
@@ -25,6 +25,24 @@ For wholesale prices, use public listings and say where and when each price is f
 
 PACK = Pack(
     name="kirana",
+    label="Kirana store",
+    abilities=(
+        Ability(
+            "Keeps your khata",
+            "Credit given and payments received, with each customer's balance read back.",
+            ("गुप्ता जी ने 340 का सामान उधार लिया", "सबसे ज़्यादा उधार किस पर है"),
+        ),
+        Ability(
+            "Order list for your supplier",
+            "Add things as they run out; Saarthi reads the list back, grouped by supplier.",
+            ("चीनी खत्म हो रही है, दस किलो लिख लो", "ऑर्डर लिस्ट पढ़कर सुनाओ"),
+        ),
+        Ability(
+            "Collects dues by phone",
+            "Calls everyone who owes you and tells them your UPI ID.",
+            ("जिन पर उधार है सबको फ़ोन करो",),
+        ),
+    ),
     voice_prompt=VOICE_PROMPT,
     worker_prompt=WORKER_PROMPT,
     match_words=(

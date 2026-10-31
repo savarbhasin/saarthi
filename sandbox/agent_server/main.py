@@ -9,7 +9,7 @@ import httpx
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
-from agent_server import runner
+from agent_server import customize, runner
 from agent_server.history import IST, CallRecord, History, TaskRecord, files_changed_since
 from agent_server.prompt import FOLLOW_UP_NOTE, RECENT_NOTE
 
@@ -33,6 +33,12 @@ class FollowUp(BaseModel):
     details: str = ""
 
 
+class SkillIn(BaseModel):
+    name: str
+    description: str
+    instructions: str
+
+
 class TaskRequest(BaseModel):
     task_id: str
     goal: str
@@ -47,6 +53,9 @@ class TaskRequest(BaseModel):
     calls_url: str = ""
     call_ref: str = ""
     follow_up: FollowUp | None = None
+    skills: list[SkillIn] = []
+    mcp_servers: dict[str, dict] = {}
+    custom_instructions: str = ""
 
 
 class CallIn(BaseModel):
@@ -121,6 +130,8 @@ async def _execute(req: TaskRequest) -> None:
         started = datetime.now(IST)
         outcome = None
         try:
+            # Always sync, so skills deleted in the web app disappear here too.
+            customize.install_skills([skill.model_dump() for skill in req.skills])
             outcome = await runner.run(
                 req.goal,
                 name=req.name,
@@ -131,7 +142,10 @@ async def _execute(req: TaskRequest) -> None:
                 language=req.language,
                 pack_prompt=req.pack_prompt,
                 calls_url=req.calls_url,
-                context_note=_context_note(req),
+                context_note=_context_note(req)
+                + customize.custom_note(req.name, req.custom_instructions),
+                extra_servers=customize.user_servers(req.mcp_servers),
+                skills=[skill.name for skill in req.skills],
             )
             body = {
                 "ok": outcome.ok,

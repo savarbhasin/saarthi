@@ -25,7 +25,6 @@ async def _owner_with_task(client) -> tuple[str, Task, User]:
             "session": session,
             "caller_name": "रमेश",
             "caller_work": "फल बेचता हूँ",
-            "caller_upi_id": "ramesh@okaxis",
             "caller_language": "hi",
             "consent": "yes",
         },
@@ -88,7 +87,7 @@ async def test_outcomes_are_recorded_and_reported_when_every_call_ends(client, f
         context = await build_messenger_context(db, owner, sharma)
         for call, execution in ((sharma, "exec-sharma"), (gupta, "exec-gupta")):
             call.status, call.bolna_execution_id = OutreachStatus.CALLING, execution
-    assert "Sharma ji" in context["greeting"] and context["upi_id"] == "ramesh@okaxis"
+    assert "Sharma ji" in context["greeting"] and "upi_id" not in context
 
     # The person called can't reach the owner's tools with their session.
     leaked = await client.post("/tools/task_status", json={"session": context["session"]})

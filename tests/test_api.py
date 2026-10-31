@@ -15,7 +15,6 @@ async def _onboarded_session(client, work: str = "फल बेचता हू�
             "session": session,
             "caller_name": "रमेश",
             "caller_work": work,
-            "caller_upi_id": "Ramesh@OkAxis",
             "caller_language": "hi",
             "consent": "yes",
         },
@@ -43,7 +42,6 @@ async def test_onboarding_then_lookup_recognises_caller(client):
     context = await _lookup(client)
     assert context["is_new"] == "no"
     assert context["name"] == "रमेश"
-    assert context["upi_id"] == "ramesh@okaxis"
     assert "रमेश" in context["greeting"]
 
 
@@ -95,19 +93,3 @@ async def test_webhook_stores_call_and_enqueues_ingest(client, fake_arq):
     await client.post("/webhooks/bolna", json=event)
     name, args, job_id = fake_arq.jobs[0]
     assert (name, job_id) == ("ingest_call", "ingest:exec-1")
-
-
-async def test_onboarding_rejects_devanagari_upi(client):
-    session = (await _lookup(client))["session"]
-    result = await client.post(
-        "/tools/onboard_user",
-        json={
-            "session": session,
-            "caller_name": "Savar",
-            "caller_upi_id": "सबरबसीन@पेटीएम",
-            "caller_language": "hi",
-            "consent": "yes",
-        },
-    )
-    assert result.json()["status"] == "invalid_arguments"
-    assert result.json()["fields"] == "caller_upi_id"

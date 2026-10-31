@@ -23,7 +23,6 @@ async def _caller_session(client) -> str:
             "session": context["session"],
             "caller_name": "Savar",
             "caller_work": "student",
-            "caller_upi_id": "",
             "caller_language": "hi",
             "consent": "yes",
         },

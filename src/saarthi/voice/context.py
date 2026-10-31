@@ -23,6 +23,7 @@ GREETINGS = {
         "task_result": "{hello}, सारथी बोल रहा हूँ। आपके काम का अपडेट है: {message}",
         "reminder": "{hello}, सारथी बोल रहा हूँ। आपने याद दिलाने को कहा था: {message}",
         "calls_done": "{hello}, सारथी बोल रहा हूँ। आपके कहने पर मैंने सबको कॉल कर लिया। {message}",
+        "login_code": "{hello}, सारथी बोल रहा हूँ। आपका लॉगिन कोड है: {message}। फिर से: {message}।",
         "unheard": "{hello}! आपके काम का अपडेट: {message} और बताइए, क्या करना है?",
         "inbound": "{hello}! बताइए, क्या करना है?",
     },
@@ -31,6 +32,7 @@ GREETINGS = {
         "task_result": "{hello}, this is Saarthi with an update on your task: {message}",
         "reminder": "{hello}, this is Saarthi. You asked me to remind you: {message}",
         "calls_done": "{hello}, this is Saarthi. I made the calls you asked for. {message}",
+        "login_code": "{hello}, this is Saarthi. Your sign-in code is {message}. Again: {message}.",
         "unheard": "{hello}! An update on your task: {message} What else can I do for you?",
         "inbound": "{hello}! What can I do for you?",
     },
@@ -45,10 +47,10 @@ CONTEXT_KEYS = frozenset(
         "greeting",
         "name",
         "language",
-        "upi_id",
         "now",
         "profile",
         "pack_prompt",
+        "custom_instructions",
         "task_updates",
         "call_reason",
     }
@@ -56,7 +58,7 @@ CONTEXT_KEYS = frozenset(
 
 # The same, for saarthi-messenger calls to someone on a user's behalf.
 MESSENGER_CONTEXT_KEYS = frozenset(
-    {"session", "greeting", "contact_name", "owner_name", "purpose", "upi_id", "language", "now"}
+    {"session", "greeting", "contact_name", "owner_name", "purpose", "language", "now"}
 )
 
 MESSENGER_GREETINGS = {
@@ -70,6 +72,7 @@ class CallReason(StrEnum):
     TASK_RESULT = "task_result"
     REMINDER = "reminder"
     CALLS_DONE = "calls_done"
+    LOGIN_CODE = "login_code"
 
 
 async def build_call_context(
@@ -103,9 +106,9 @@ async def build_call_context(
             "greeting": NEW_CALLER_GREETING,
             "name": "",
             "language": "unknown",
-            "upi_id": "",
             "profile": "",
             "pack_prompt": "",
+            "custom_instructions": "none",
             "task_updates": "none",
         }
 
@@ -117,9 +120,9 @@ async def build_call_context(
         "greeting": _greeting(user, reason, message, [t.summary or "" for t in unheard]),
         "name": user.name or "",
         "language": user.language,
-        "upi_id": user.upi_id or "",
         "profile": await profile_cache.get(db, user.id) or "(nothing yet)",
         "pack_prompt": pack_for(user.pack).voice_prompt,
+        "custom_instructions": user.custom_instructions or "none",
         "task_updates": "\n".join(tasks.describe(t) for t in recent) or "none",
     }
 
@@ -137,7 +140,6 @@ async def build_messenger_context(
         "contact_name": call.contact_name,
         "owner_name": owner.name or "",
         "purpose": call.purpose,
-        "upi_id": owner.upi_id or "",
         "language": owner.language,
         "now": _now(),
     }

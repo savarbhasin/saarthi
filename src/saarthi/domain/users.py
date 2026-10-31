@@ -5,6 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from saarthi.db.models import User
 
+SUPPORTED_LANGUAGES = {"hi", "en", "bn", "ta", "te", "mr", "gu", "kn", "pa", "ml", "od"}
+
 
 async def get_by_phone(session: AsyncSession, phone: str) -> User | None:
     return await session.scalar(select(User).where(User.phone == phone))
@@ -18,7 +20,6 @@ async def onboard(
     occupation: str | None,
     language: str,
     pack: str,
-    upi_id: str | None,
     consent: bool,
 ) -> User:
     user = await get_by_phone(session, phone)
@@ -29,7 +30,6 @@ async def onboard(
     user.occupation = occupation
     user.language = language
     user.pack = pack
-    user.upi_id = upi_id.strip().lower() if upi_id else None
     if consent and user.consent_at is None:
         user.consent_at = datetime.now(UTC)
     await session.flush()

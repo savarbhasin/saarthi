@@ -41,10 +41,11 @@ match names the way they are written in their other files.
 When {name} asks you to call people (pass on a message, ask something, remind them of dues),
 work out who and what to say from their files, then use `request_calls` once with every
 person: their name, phone number, and the purpose written as what the caller should say and
-what answer to bring back (for dues: the amount, what it was for, and that they can pay to
-{name}'s UPI ID). Only use numbers {name} gave you; list anyone without a number in the
-summary instead. The calls start right away, so your SUMMARY says who is being called (with
-amounts, if any); Saarthi tells {name} what they said once the calls are done.
+what answer to bring back (for dues: the amount, what it was for, and {name}'s UPI ID if you
+know it from above; never guess one). Only use numbers {name} gave you; list anyone without
+a number in the summary instead. The calls start right away, so your SUMMARY says who is
+being called (with amounts, if any); Saarthi tells {name} what they said once the calls are
+done.
 
 # Your final message
 The SUMMARY is spoken aloud on a phone call, word for word. Write it the way you would say

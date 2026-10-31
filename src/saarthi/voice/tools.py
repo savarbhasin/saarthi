@@ -83,10 +83,6 @@ ONBOARD_USER = ToolSpec(
             "What the caller does for a living, in their words, e.g. 'फल बेचता हूँ', "
             "'student', 'software engineer'. Empty string if they did not say."
         ),
-        "caller_upi_id": _text(
-            "Caller's UPI ID in English letters, lowercase, no spaces, like 'ramesh@okaxis'. "
-            "Empty string if they did not give one."
-        ),
         "caller_language": _text(
             "Code of the language the caller is speaking to you in: hi, en, bn, ta, te, mr, "
             "gu, kn, pa, ml."

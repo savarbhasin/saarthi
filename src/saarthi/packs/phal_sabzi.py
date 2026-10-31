@@ -1,4 +1,4 @@
-from saarthi.packs.base import KHATA_WORKER, Pack
+from saarthi.packs.base import KHATA_WORKER, Ability, Pack
 
 VOICE_PROMPT = """\
 # This caller sells fruit and vegetables
@@ -21,6 +21,25 @@ market and date the price is for."""
 
 PACK = Pack(
     name="phal_sabzi",
+    label="Fruit & vegetable seller",
+    abilities=(
+        Ability(
+            "Keeps your khata",
+            "Tell Saarthi who took credit or paid back; it keeps the ledger and reads back the "
+            "balance.",
+            ("शर्मा जी ने दो सौ उधार लिए", "किस पर कितना उधार है"),
+        ),
+        Ability(
+            "Collects dues by phone",
+            "Calls everyone who owes you and tells them your UPI ID, now or every evening.",
+            ("जिन पर उधार है सबको फ़ोन करो", "रोज़ रात 9 बजे बकाया वालों को फ़ोन करो"),
+        ),
+        Ability(
+            "Mandi rates",
+            "Today's price for what you sell, from Agmarknet, or a call every morning with it.",
+            ("आज आज़ादपुर मंडी में आम का भाव", "हर सुबह 6 बजे टमाटर का भाव बताना"),
+        ),
+    ),
     voice_prompt=VOICE_PROMPT,
     worker_prompt=WORKER_PROMPT,
     match_words=(

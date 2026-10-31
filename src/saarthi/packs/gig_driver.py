@@ -1,4 +1,4 @@
-from saarthi.packs.base import Pack
+from saarthi.packs.base import Ability, Pack
 
 VOICE_PROMPT = """\
 # This caller drives or delivers for a living (auto, cab, bike taxi, delivery)
@@ -24,6 +24,24 @@ For fuel prices, give today's price in their city from a live source, with the d
 
 PACK = Pack(
     name="gig_driver",
+    label="Driver / delivery",
+    abilities=(
+        Ability(
+            "Earnings log",
+            "Say what you earned and spent; hear today's and this week's net, hands-free.",
+            ("आज ओला से बारह सौ, सीएनजी तीन सौ", "इस हफ्ते कितना कमाया"),
+        ),
+        Ability(
+            "Papers and EMI reminders",
+            "Insurance, PUC, permit and licence dates, with a call a few days before.",
+            ("इंश्योरेंस 15 तारीख को खत्म हो रहा है", "हर महीने 5 तारीख को ईएमआई याद दिलाना"),
+        ),
+        Ability(
+            "Fuel prices and routes",
+            "Today's CNG or petrol price, traffic and routes, while you drive.",
+            ("आज सीएनजी का रेट क्या है", "एयरपोर्ट जाने का रास्ता खाली है?"),
+        ),
+    ),
     voice_prompt=VOICE_PROMPT,
     worker_prompt=WORKER_PROMPT,
     match_words=(

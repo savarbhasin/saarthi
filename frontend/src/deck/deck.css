@@ -1,0 +1,34 @@
+/* The deck reuses the landing sections as slides. Two adjustments on top of styles.css:
+   force the light palette (slides are projected, so the mood must not flip with the OS),
+   and tighten the tall page rhythm so each section fits a 16:9-ish window better. */
+
+html.deck {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Same values as the light :root block in styles.css. html.deck outranks :root. */
+  html.deck {
+    --canvas: #f6f3ee;
+    --soft: #efe9df;
+    --surface: #ffffff;
+    --fg: #1f1b16;
+    --muted: #6f675c;
+    --line: #e6dfd3;
+    --accent: #d9480f;
+    --accent-soft: #fdebe1;
+    --accent-fg: #ffffff;
+    --ok: #2b8a3e;
+    --ok-soft: #e6f4ea;
+    --warn: #b35c00;
+    --warn-soft: #fdf0dc;
+    --bad: #c92a2a;
+    --bad-soft: #fde8e8;
+    color-scheme: light;
+  }
+}
+
+/* Sections were built for a scrolling page; a slide only needs a third of that air. */
+[data-slide] > section {
+  padding-block: 3rem;
+}

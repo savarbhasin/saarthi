@@ -1,4 +1,4 @@
-from saarthi.packs.base import KHATA_WORKER, Pack
+from saarthi.packs.base import KHATA_WORKER, Ability, Pack
 
 VOICE_PROMPT = """\
 # This caller is a tradesperson (plumber, electrician, carpenter, tailor, mechanic and similar)
@@ -29,6 +29,24 @@ estimates as an itemised list with a total."""
 
 PACK = Pack(
     name="service_pro",
+    label="Tradesperson",
+    abilities=(
+        Ability(
+            "Bookings and reminders",
+            "Keeps your jobs list and reminds you before each one.",
+            ("कल सुबह दस बजे वर्मा जी के यहाँ वायरिंग", "कल का काम बताओ"),
+        ),
+        Ability(
+            "Customer dues",
+            "Work done on credit and payments received, and calls to collect what's owed.",
+            ("वर्मा जी ने 1500 देने हैं", "जिन पर पैसे बाकी हैं उन्हें फ़ोन करो"),
+        ),
+        Ability(
+            "Quotes",
+            "Looks up material prices and gives you an itemised estimate.",
+            ("दस मीटर पाइप और चार नल का रेट निकालो",),
+        ),
+    ),
     voice_prompt=VOICE_PROMPT,
     worker_prompt=WORKER_PROMPT,
     match_words=(

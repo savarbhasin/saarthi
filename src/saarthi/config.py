@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     # Shared secret Bolna sends as a bearer token on lookup and tool calls.
     bolna_tool_secret: str = "change-me"
     bolna_phone_number_id: str = ""
+    # How web app sign-in codes reach the user: a Saarthi call, or the API log (local dev).
+    web_login_delivery: Literal["call", "log"] = "call"
     telephony_provider: Literal["plivo", "exotel", "twilio"] = "plivo"
 
     # OpenRouter is wired through Bolna's "custom" (OpenAI-compatible) LLM provider.

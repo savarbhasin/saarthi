@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from saarthi.config import get_settings
 from saarthi.db.models import Task, TaskStatus, User
 from saarthi.db.session import session_scope
-from saarthi.domain import history, tasks
+from saarthi.domain import customize, history, tasks
 from saarthi.domain.routines import USER_TZ
 from saarthi.memory import profile_cache
 from saarthi.packs import pack_for
@@ -27,6 +27,8 @@ async def run_task(ctx: dict, task_id: str) -> None:
         task.status = TaskStatus.RUNNING
         profile = await profile_cache.get(session, user.id)
         earlier = await session.get(Task, task.follow_up_of) if task.follow_up_of else None
+        skills = customize.skills_payload(await customize.skills(session, user.id))
+        servers = customize.servers_payload(await customize.servers(session, user.id))
         task_url = f"{get_settings().sandbox_api_url}/sandbox/tasks/{task_id}"
         payload = {
             "task_id": task_id,
@@ -41,6 +43,9 @@ async def run_task(ctx: dict, task_id: str) -> None:
             "pack_prompt": pack_for(user.pack).worker_prompt,
             "call_ref": history.call_ref(task.call_execution_id) if task.call_execution_id else "",
             "follow_up": history.follow_up_payload(earlier) if earlier else None,
+            "skills": skills,
+            "mcp_servers": servers,
+            "custom_instructions": user.custom_instructions or "",
         }
 
     try:

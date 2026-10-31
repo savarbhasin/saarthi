@@ -1,4 +1,4 @@
-from saarthi.packs.base import Pack
+from saarthi.packs.base import Ability, Pack
 
 VOICE_PROMPT = """\
 # This caller is a farmer
@@ -38,6 +38,32 @@ Their village, district and crops are in the profile above; use them.
 
 PACK = Pack(
     name="kisan",
+    label="Farmer",
+    abilities=(
+        Ability(
+            "Mandi rates nearby",
+            "Today's price for your crop at the nearest mandis, per quintal, from Agmarknet "
+            "and eNAM.",
+            ("आज करनाल मंडी में गेहूँ का भाव", "हर सुबह सरसों का भाव बताना"),
+        ),
+        Ability(
+            "Weather and when to spray",
+            "Forecast for your district, and a plain answer on whether to spray, irrigate or "
+            "harvest.",
+            ("अगले हफ्ते बारिश होगी क्या", "कल छिड़काव कर सकते हैं?"),
+        ),
+        Ability(
+            "Government schemes",
+            "PM-KISAN, crop insurance, Kisan Credit Card: who qualifies and what to do, from "
+            "official sites.",
+            ("पीएम किसान की किस्त कब आएगी", "फसल बीमा कैसे करवाऊँ"),
+        ),
+        Ability(
+            "Farm hisaab",
+            "Seed, fertiliser, labour and sales, with the season's profit worked out.",
+            ("दो बोरी डीएपी, 2700 खर्च लिखो", "इस सीज़न कितना मुनाफ़ा हुआ"),
+        ),
+    ),
     voice_prompt=VOICE_PROMPT,
     worker_prompt=WORKER_PROMPT,
     match_words=(

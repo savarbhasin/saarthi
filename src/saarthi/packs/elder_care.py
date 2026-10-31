@@ -1,4 +1,4 @@
-from saarthi.packs.base import Pack
+from saarthi.packs.base import Ability, Pack
 
 VOICE_PROMPT = """\
 # This caller is an elderly person
@@ -34,6 +34,29 @@ Keep what they will hear short and plain, with no jargon.
 
 PACK = Pack(
     name="elder_care",
+    label="Elder care",
+    abilities=(
+        Ability(
+            "Medicine reminders",
+            "A call every day at your medicine time, with the name and dose.",
+            ("रोज़ सुबह 8 बजे बीपी की दवाई याद दिलाना",),
+        ),
+        Ability(
+            "Health readings",
+            "Keeps your BP and sugar readings and tells you how today compares.",
+            ("आज बीपी 140 पर 90 आया", "पिछले हफ्ते की शुगर कैसी थी"),
+        ),
+        Ability(
+            "Help with bills, pension and phone",
+            "Explains things one step at a time, and warns you if someone asks for an OTP.",
+            ("पेंशन का पैसा आया या नहीं कैसे देखूँ", "किसी ने ओटीपी माँगा है"),
+        ),
+        Ability(
+            "Someone to talk to",
+            "Happy to just chat, and remembers your family and what matters to you.",
+            ("थोड़ी देर बात करो",),
+        ),
+    ),
     voice_prompt=VOICE_PROMPT,
     worker_prompt=WORKER_PROMPT,
     match_words=(

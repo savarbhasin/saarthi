@@ -68,6 +68,8 @@ def _options(
     pack_prompt: str,
     calls_url: str,
     context_note: str,
+    extra_servers: dict[str, dict],
+    skills: list[str],
 ) -> ClaudeAgentOptions:
     system_prompt = SYSTEM_PROMPT.format(
         name=name,
@@ -80,17 +82,21 @@ def _options(
         system_prompt += QUICK_NOTE.format(name=name)
     system_prompt += context_note
     max_turns = int(os.environ.get("WORKER_MAX_TURNS", "60"))
-    mcp_servers: dict = {"browser": _browser_server()}
+    mcp_servers: dict = {**extra_servers, "browser": _browser_server()}
     if calls_url:
         mcp_servers["saarthi"] = calls_server(calls_url)
+    # Skills the user wrote in the web app live in ~/.claude/skills (see customize.py).
+    tools = [*BUILTIN_TOOLS, "Skill"] if skills else BUILTIN_TOOLS
     return ClaudeAgentOptions(
         model=os.environ["WORKER_MODEL"],
         system_prompt=system_prompt,
         cwd=str(HOME),
         permission_mode="bypassPermissions",
         mcp_servers=mcp_servers,
-        tools=BUILTIN_TOOLS,
-        allowed_tools=[*BUILTIN_TOOLS, *(f"mcp__{name}" for name in mcp_servers)],
+        tools=tools,
+        allowed_tools=[*tools, *(f"mcp__{server}" for server in mcp_servers)],
+        # A filter on what the model is shown: Claude Code's bundled skills stay hidden.
+        skills=skills or None,
         max_turns=min(max_turns, QUICK_MAX_TURNS) if quick else max_turns,
         max_budget_usd=float(os.environ.get("WORKER_MAX_BUDGET_USD", "1.5")),
         resume=resume,
@@ -133,6 +139,8 @@ async def run(
     pack_prompt: str = "",
     calls_url: str = "",
     context_note: str = "",
+    extra_servers: dict[str, dict] | None = None,
+    skills: list[str] | None = None,
 ) -> Outcome:
     final: ResultMessage | None = None
     trace: list[str] = []
@@ -148,6 +156,8 @@ async def run(
             pack_prompt=pack_prompt,
             calls_url=calls_url,
             context_note=context_note,
+            extra_servers=extra_servers or {},
+            skills=skills or [],
         ),
     ):
         if isinstance(message, ResultMessage):

@@ -21,6 +21,21 @@ uv run saarthi-sync             # register the OpenRouter model, create/update a
 uv run saarthi-sync --dry-run   # print agent payloads without calling Bolna
 ```
 
+## Web app
+
+A Vite + React + Tailwind app in `frontend/`, built into the API image and served at `/app` (JSON API under
+`/api/web`). Sign in with the phone number you call Saarthi from; Saarthi calls you and reads a
+6-digit code (`WEB_LOGIN_DELIVERY=log` shows it on screen instead, for local dev). There you
+can edit your profile and standing instructions (your UPI ID goes there), write skills
+(installed as `~/.claude/skills/<name>/SKILL.md` in your sandbox before every task), connect MCP
+servers (stdio ones run inside your sandbox), and see your tasks and schedule.
+
+```bash
+cd frontend && npm install
+npm run dev     # http://localhost:5173/app, proxies /api to the backend on :8091
+npm run build   # what FastAPI serves at /app
+```
+
 ## Test
 
 ```bash

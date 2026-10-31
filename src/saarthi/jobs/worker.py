@@ -7,6 +7,7 @@ from saarthi.jobs.ingest import ingest_call
 from saarthi.jobs.outreach import place_outreach_call, report_outreach
 from saarthi.jobs.routines import run_routine
 from saarthi.jobs.tasks import report_task, run_task
+from saarthi.jobs.web import send_login_code
 
 
 def redis_settings() -> RedisSettings:
@@ -25,6 +26,7 @@ class WorkerSettings:
         report_task,
         place_outreach_call,
         report_outreach,
+        send_login_code,
     ]
     on_startup = _startup
     redis_settings = redis_settings()

@@ -12,6 +12,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -84,6 +85,12 @@ class OutreachStatus(StrEnum):
     FAILED = "failed"
 
 
+class McpTransport(StrEnum):
+    STDIO = "stdio"
+    HTTP = "http"
+    SSE = "sse"
+
+
 class CallDirection(StrEnum):
     INBOUND = "inbound"
     OUTBOUND = "outbound"
@@ -98,7 +105,8 @@ class User(Base):
     language: Mapped[str] = mapped_column(String(8), default="hi")
     pack: Mapped[str] = mapped_column(String(32), default="general")
     occupation: Mapped[str | None] = mapped_column(String(200))
-    upi_id: Mapped[str | None] = mapped_column(String(120))
+    # The user's own standing instructions, added to both the voice agent and the worker.
+    custom_instructions: Mapped[str | None] = mapped_column(Text)
     consent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = _created_at()
 
@@ -200,6 +208,51 @@ class OutreachCall(Base):
     bolna_execution_id: Mapped[str | None] = mapped_column(String(64), unique=True)
     created_at: Mapped[datetime] = _created_at()
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class UserSkill(Base):
+    """A skill the user wrote for their worker; written to ~/.claude/skills/<name>/SKILL.md."""
+
+    __tablename__ = "user_skills"
+    __table_args__ = (UniqueConstraint("user_id", "name"),)
+
+    id: Mapped[uuid.UUID] = _pk()
+    user_id: Mapped[uuid.UUID] = _user_fk()
+    name: Mapped[str] = mapped_column(String(40))
+    description: Mapped[str] = mapped_column(Text)
+    instructions: Mapped[str] = mapped_column(Text)
+    enabled: Mapped[bool] = mapped_column(default=True, server_default="true")
+    created_at: Mapped[datetime] = _created_at()
+
+
+class McpServer(Base):
+    """An MCP server the user connected; stdio ones run inside their own sandbox."""
+
+    __tablename__ = "mcp_servers"
+    __table_args__ = (UniqueConstraint("user_id", "name"),)
+
+    id: Mapped[uuid.UUID] = _pk()
+    user_id: Mapped[uuid.UUID] = _user_fk()
+    name: Mapped[str] = mapped_column(String(40))
+    transport: Mapped[McpTransport] = mapped_column(_enum(McpTransport))
+    # stdio: command, args, env. http/sse: url, headers.
+    config: Mapped[dict] = mapped_column(JSONB, default=dict)
+    enabled: Mapped[bool] = mapped_column(default=True, server_default="true")
+    created_at: Mapped[datetime] = _created_at()
+
+
+class LoginCode(Base):
+    __tablename__ = "login_codes"
+
+    id: Mapped[uuid.UUID] = _pk()
+    phone: Mapped[str] = mapped_column(String(20), index=True)
+    code_hash: Mapped[str] = mapped_column(String(64))
+    attempts: Mapped[int] = mapped_column(default=0, server_default="0")
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # The Saarthi call that read the code out, so its transcript is kept out of memory.
+    call_execution_id: Mapped[str | None] = mapped_column(String(64), index=True)
+    created_at: Mapped[datetime] = _created_at()
 
 
 class Call(Base):

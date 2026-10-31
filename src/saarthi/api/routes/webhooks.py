@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from saarthi.api.deps import BolnaAuth, Db
 from saarthi.db.models import BolnaAgent, Call, CallDirection
-from saarthi.domain import outreach, tasks, users
+from saarthi.domain import login, outreach, tasks, users
 from saarthi.domain.phone import InvalidPhone, normalize_phone
 from saarthi.jobs.outreach import enqueue_report
 from saarthi.voice.outbound import MESSENGER_AGENT
@@ -69,7 +69,10 @@ async def bolna_execution(request: Request, db: Db) -> dict[str, str]:
     # A messenger call is with someone the user knows; never file it under any user's memory,
     # even if that person happens to use Saarthi too.
     is_messenger = agent_name == MESSENGER_AGENT
-    user = await users.get_by_phone(db, phone) if phone and not is_messenger else None
+    # A call that read out a sign-in code is kept out of memory, history and the calls log.
+    is_code_call = await login.is_code_call(db, event.id)
+    private = is_messenger or is_code_call
+    user = await users.get_by_phone(db, phone) if phone and not private else None
 
     values = {
         "bolna_execution_id": event.id,
@@ -77,7 +80,7 @@ async def bolna_execution(request: Request, db: Db) -> dict[str, str]:
         "agent_name": agent_name,
         "direction": direction,
         "status": event.status,
-        "transcript": event.transcript,
+        "transcript": None if is_code_call else event.transcript,
         "extracted": event.extracted_data,
         "duration_seconds": event.conversation_duration,
     }
